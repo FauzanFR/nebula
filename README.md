@@ -56,7 +56,6 @@ Across datasets such as:
 - 🍷 Wine Quality
 - 🧔 Adult Income
 - 🛳️ Titanic
-- ☄️ Gamma Telescope
 
 | Dataset    | Algo       | Best Score | Mean Score | Trials | Std Dev | Avg Time | Max Time | Min Time |
 |------------|------------|------------|------------|--------|---------|----------|----------|----------|
