@@ -89,6 +89,6 @@ especially on multicore machines.
 This is due to its use of parallel evaluation and population-based operations, which amortize better over larger generations.
 
 ---
-## 📄 License
+## License
 
 This project is licensed under the Apache 2.0 License — see the [LICENSE](./LICENSE) file for details.
