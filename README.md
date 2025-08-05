@@ -6,8 +6,7 @@ Especially in compute-intensive tuning scenarios such as high-dimensional search
 
 ---
 
-## ⚙️
-Key Features
+## Key Features
 
 - **Hybrid Genetic Evolution**  
   Combines BLX-α and SBX crossover operators with Gaussian + Cauchy mutation for both continuous and categorical parameters.
