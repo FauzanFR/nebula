@@ -1,4 +1,4 @@
-# 🌌 Nebula Tuner
+# Nebula Tuner
 
 **Nebula** is an experimental hyperparameter optimization engine powered by evolutionary strategies.  
 It is designed to balance exploration and exploitation efficiently, especially in compute-intensive tuning scenarios.
@@ -6,30 +6,31 @@ Especially in compute-intensive tuning scenarios such as high-dimensional search
 
 ---
 
-## ⚙️ Key Features
+## ⚙️
+Key Features
 
-- 🔀 **Hybrid Genetic Evolution**  
+- **Hybrid Genetic Evolution**  
   Combines BLX-α and SBX crossover operators with Gaussian + Cauchy mutation for both continuous and categorical parameters.
 
-- 🎲 **Sobol Sequence Initialization**  
+- **Sobol Sequence Initialization**  
   Generates the initial population with uniform space-filling distribution for better coverage.
 
-- 🧠 **Numba-Accelerated Surrogate Model**  
+- **Numba-Accelerated Surrogate Model**  
   A minimalist MLP predictor compiled via `@njit` to estimate objective scores and reduce unnecessary evaluations.
 
-- ♻️ **Built-in Memoization**  
+- **Built-in Memoization**  
   Previously evaluated parameter configurations are cached
 
-- ⚡ **Batch Parallel Evaluation (`joblib.Parallel`)**  
+- **Batch Parallel Evaluation (`joblib.Parallel`)**  
   Evaluates population members concurrently using available CPU cores with automatic conflict detection (e.g. Avoids resource conflict with model-level parallelism (e.g., `n_jobs=-1`)).
 
-- 💥 **Adaptive Exploratory Injection**
+- **Adaptive Exploratory Injection**
   Injects novel candidates upon stagnation to escape local optima, inspired by probabilistic diversification strategies.
 
-- 🛑 **Stagnation-Aware Early Stopping**  
+- **Stagnation-Aware Early Stopping**  
   Automatically terminates evolution when no meaningful improvements are observed over time.
 
-- 💾 **Automatic Logging to CSV**  
+- **Automatic Logging to CSV**  
   The best individual of each generation is saved incrementally for progress tracking and recovery.
 
 ---
@@ -41,7 +42,7 @@ pip install numpy joblib pandas tqdm scikit-learn numba
 ```
 ---
 
-## 📊 Lightweight Benchmark
+## Lightweight Benchmark
 
 Nebula has been benchmarked against several common optimization libraries:
 
@@ -53,9 +54,9 @@ Nebula has been benchmarked against several common optimization libraries:
 
 Across datasets such as:
 
-- 🍷 Wine Quality
-- 🧔 Adult Income
-- 🛳️ Titanic
+- Wine Quality
+- Adult Income
+- Titanic
 
 | Dataset    | Algo       | Best Score | Mean Score | Trials | Std Dev | Avg Time | Max Time | Min Time |
 |------------|------------|------------|------------|--------|---------|----------|----------|----------|
@@ -79,7 +80,7 @@ Across datasets such as:
 | wine       | random     | 0.957324   | 0.925481   | 1500   | 0.017225| 0.702832 | 2.717413 | 0.102117 |
 
 
-⚠️ Note:
+Note:
 Per-trial time may appear higher in Nebula,
 but unlike conventional tuners, it executes trials in parallel (e.g., joblib, batch vectorization).
 
