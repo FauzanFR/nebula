@@ -106,5 +106,6 @@ if __name__ == "__main__":
         batch_size=100,
         class_df=MyEvaluator, 
         verbose=True,
-        results_path="log/game.csv"
+        results_path="log\game.csv",
+        early_stopping=False
         )

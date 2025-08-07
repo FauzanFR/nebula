@@ -6,18 +6,18 @@ Primary components for hyperparameter optimization:
 - GeneticOptimizer      : Evolutionary parameter optimization
 - AdaptiveSampler       : History-aware parameter generator 
 - NeuralPredictor       : Performance prediction model
-- EarlyStopOracle       : Intelligent convergence detection
+- EarlyStop             : Intelligent convergence detection
 """
 from .engine import NebulaTunerEngine
 from .optimizer import GeneticOptimizer
 from .sampler import AdaptiveSampler
 from .predictor import NeuralPredictor
-from .earlystop import EarlyStopOracle
+from .earlystop import EarlyStop
 
 __all__ = [
     'NebulaTunerEngine',
     'GeneticOptimizer',
     'AdaptiveSampler',
     'NeuralPredictor',
-    'EarlyStopOracle'
+    'EarlyStop'
 ]

@@ -1,0 +1,10 @@
+# Pytthon
+venv/
+log/
+__pycache__/
+
+# IDE/editor
+.idea/
+.vscode/
+.DS_Store
+vact.bat

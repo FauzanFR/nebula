@@ -38,6 +38,7 @@ def Tuner (
         results_path: str="log/nebula_tuning.csv",
         core_use:int=None,
         verbose:bool=True,
+        early_stopping:bool=True
         ) -> Generator[dict, None, None]:
     try:
         if isinstance(param_space, list):
@@ -73,6 +74,7 @@ def Tuner (
             print(f"Starting Nebula optimization for '{name}'")
             print(f"Parameter space: {len(param_space)} dimensions")
             print(f"Genetic config: {genetic_config}")
+            print(early_stopping)
 
         tuner = nebula.core.NebulaTunerEngine(
             param_space=param_space,
@@ -90,6 +92,7 @@ def Tuner (
         tuner.optimize(
             generations=generations,
             results_path=results_path,
+            early_stopping=early_stopping
         )
 
         gc.collect()

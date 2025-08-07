@@ -1,5 +1,5 @@
 """
-EarlyStopOracle
+EarlyStop
 
 Intelligently detects optimization convergence by:
 - Tracking score gradient trends
@@ -9,7 +9,7 @@ Intelligently detects optimization convergence by:
 
 import numpy as np
 
-class EarlyStopOracle:
+class EarlyStop:
     def __init__(self, patience=3, window=5, grad_thresh=0.01):
         self.scores = []
         self.patience = patience

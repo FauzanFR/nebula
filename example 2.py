@@ -43,6 +43,7 @@ if __name__ == "__main__":
         batch_size=30,
         class_df=RFCase,
         verbose=True,
-        results_path="log/RF.csv",
+        results_path="log\RF.csv",
         core_use=None,
+        early_stopping=True
         )

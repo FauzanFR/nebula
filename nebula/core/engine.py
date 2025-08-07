@@ -10,10 +10,8 @@ Core optimization driver that coordinates:
 
 import gc
 import logging
-import multiprocessing
 import os
 import random
-import sys
 import time
 
 from joblib import Parallel, delayed
@@ -21,7 +19,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-from .earlystop import EarlyStopOracle
+from .earlystop import EarlyStop
 from .optimizer import GeneticOptimizer
 from .predictor import NeuralPredictor, predict_njit, train_njit, forward
 from .sampler import AdaptiveSampler
@@ -148,16 +146,18 @@ class NebulaTunerEngine:
 
         return valid_results
     
-    def optimize(self, generations=10, results_path=f"log_results.csv"):
+    def optimize(self, generations=10, results_path=f"log_results.csv", early_stopping=True):
         try:
             start_time = time.perf_counter()
-            terminator = EarlyStopOracle()
+            terminator = EarlyStop()
             self.ga_optimizer.total_gen = generations
             self.logger.info(f"Starting optimization for {self.name}")
             valid_keys = list(self.ga_optimizer.param_space.keys())
             sobol_points = self.ga_optimizer.sobol_sample(self.ga_optimizer.population_size)
             population = []
             best_save = {'score': -float('inf')}
+            save_x = 0
+            switch_early_stopping = False
 
             for point in sobol_points:
                 individual = {}
@@ -180,11 +180,22 @@ class NebulaTunerEngine:
                 batch_results = []
                 for chunk in self.chunked_population(population):
                     batch_results += self.run_parallel_batch(chunk)
+
                 X_train = np.array([
                     normalize(strip_result_keys(res, self.ga_optimizer.param_space.keys()), self.ga_optimizer.param_space)
                     for res in batch_results
                 ])
+
                 y_train = np.array([res['score'] for res in batch_results])
+                max_score = np.max(y_train)
+
+                if max_score == 1.0 or max_score == 0.0:
+                    x = 1
+                else:
+                    x = 10 ** int(np.log10(max_score) + 1)
+                    save_x = max(save_x, x * 1000)
+
+                y_train = y_train / save_x
                 self.predictor.train(X_train, y_train)
 
                 self.temp_results.extend(batch_results)
@@ -197,7 +208,7 @@ class NebulaTunerEngine:
                 self.sampler.update(scored_population,gen+1)
                 
                 sorted_population = sorted(scored_population, key=lambda x: x[1], reverse=True)
-                elites = [ind for ind, score in sorted_population[:self.ga_optimizer.elite_size]]
+                elites = [ind for ind, _ in sorted_population[:self.ga_optimizer.elite_size]]
                 self.ga_optimizer.history += [{"gen": gen, "params": strip_result_keys(res, valid_keys), "score": res["score"]} for res in batch_results]
                 
                 best = max(batch_results, key=lambda x: x['score'])
@@ -212,10 +223,9 @@ class NebulaTunerEngine:
                     parent1, parent2 = self.ga_optimizer.select_parents(scored_population,self.best_score_ever)
                     child = self.ga_optimizer.breed(parent1, parent2)
                     new_generation.append(child)
-
+                
                 X_pred = np.array([normalize(c, self.ga_optimizer.param_space) for c in new_generation])
                 pred_scores = self.predictor.predict(X_pred).flatten()
-
 
                 top_indices = np.argsort(pred_scores)[::-1][:self.ga_optimizer.population_size - len(elites)]
                 selected_children = [new_generation[i] for i in top_indices]
@@ -227,15 +237,23 @@ class NebulaTunerEngine:
                     self.logger.info(f"Gen {gen+1} | Best Score: {best_save['score']:.2f}")
                     
                 if terminator.should_stop(best_save['score']) and gen+1 < len(range(generations)):
-                    inject_ratio = min(0.5, 0.1 + terminator.total_stagnant * 0.05)
-                    inject_size = int(self.ga_optimizer.population_size * inject_ratio)
-                    self.logger.info(f"Stagnan, Quantum Inject {inject_size} individu...")
-                    population[-inject_size:] = [self.sampler.sample() for _ in range(inject_size)]
-                    terminator.patience = 3
-                    
-            save_best_config(self.name, best_save, self.conf_path)
-            total_time = time.perf_counter() - start_time
-            self._save_final(results_path, total_time=total_time)
+                    if early_stopping:
+                        save_best_config(self.name, best_save, self.conf_path)
+                        total_time = time.perf_counter() - start_time
+                        self._save_final(results_path, total_time=total_time)
+                        switch_early_stopping = True
+                        break
+                    else:
+                        terminator.patience = 3
+                        inject_ratio = min(0.5, 0.1 + terminator.total_stagnant * 0.05)
+                        inject_size = int(self.ga_optimizer.population_size * inject_ratio)
+                        self.logger.info(f"Stagnan, Inject {inject_size} individu...")
+                        population[-inject_size:] = [self.sampler.sample() for _ in range(inject_size)]
+
+            if switch_early_stopping == False:
+                save_best_config(self.name, best_save, self.conf_path)
+                total_time = time.perf_counter() - start_time
+                self._save_final(results_path, total_time=total_time)
 
         except Exception as e:
             self.logger.critical(f"Optimization crashed: {str(e)}")
@@ -258,14 +276,19 @@ class NebulaTunerEngine:
     def _save_final(self, path, total_time=None):
         try:
             if os.path.exists(path + ".tmp"):
+                print('a')
                 tmp_df = pd.read_csv(path + ".tmp")
                 final_df = pd.concat([tmp_df, pd.DataFrame(self.temp_results)])
                 final_df.to_csv(path, index=False)
                 os.remove(path + ".tmp")
+                if total_time is not None:
+                    final_df["elapsed_time"] = total_time
             else:
-                pd.DataFrame(self.temp_results).to_csv(path, index=False)
-            if total_time is not None:
-                final_df["elapsed_time"] = total_time
+                final_df = pd.DataFrame(self.temp_results)
+                if total_time is not None:
+                    final_df["elapsed_time"] = total_time
+                final_df.to_csv(path, index=False)
+
 
             print(f"Results saved to {path}")
         except Exception as e:

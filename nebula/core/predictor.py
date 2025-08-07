@@ -10,17 +10,17 @@ A lightweight neural network that:
 import numpy as np
 from numba import njit
 
-@njit
+@njit(parallel=True)
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
-@njit
+@njit(parallel=True)
 def forward(X, W1, W2):
     H = np.tanh(X @ W1)
     out = sigmoid(H @ W2)
     return H, out
 
-@njit
+@njit(parallel=True)
 def train_njit(X, y, W1, W2, lr, epochs):
     batch_size = min(64, X.shape[0])
     loss_prev = 1e9
@@ -47,7 +47,7 @@ def train_njit(X, y, W1, W2, lr, epochs):
 
     return W1, W2, lr
 
-@njit
+@njit(parallel=True)
 def predict_njit(X, W1, W2):
     H = np.tanh(X @ W1)
     return sigmoid(H @ W2)
